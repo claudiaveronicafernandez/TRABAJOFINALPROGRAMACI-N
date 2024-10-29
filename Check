@@ -1,0 +1,145 @@
+var readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+//acá registramos pasajeros (con un par predefinidos)
+
+var pasajeros = [
+    {
+        nombre: 'Papá',
+        dni: 12965274,
+        historial: []
+    },
+    {
+        nombre: 'Mamá',
+        dni: 14674319,
+        historial: []
+    }
+];
+
+//acá registramos las ciudades (para escalabilidad)
+var ciudades = ['MDQ', 'IGU'];
+
+//acá registramos los vuelos (para escalabilidad)
+var vuelos = [
+    {
+        numero: 308,
+        origen: 'MDQ',
+        destino: 'IGU',
+        pasajeros: [],
+        capacidad: 20
+    },
+    {
+        numero: 309,
+        origen: 'IGU',
+        destino: 'MDQ',
+        pasajeros: [],
+        capacidad: 20
+    }
+];
+
+
+//funciones!
+var registrarPasajero = (nombre, dni) => {
+    pasajeros.push({
+        nombre: nombre,
+        dni: dni,
+        historial: []
+    });
+};
+var agregarPasajero = (posVuelo, dniPasajero) => {
+    if (vuelos[posVuelo].pasajeros.length < vuelos[posVuelo].capacidad) {
+        let pasajero = pasajeros.find(p => p.dni === dniPasajero);
+        vuelos[posVuelo].pasajeros.push(pasajero);
+        console.log('Se registró correctamente a ' + pasajero.nombre + ' en el vuelo.');
+        pasajero.historial.push({
+            vuelo: vuelos[posVuelo].numero,
+            fecha: Date.now()
+        });
+    } else {
+        console.log('El vuelo está lleno! Ya salió hacia su destino. No se puede registrar al pasajero.');
+        vuelos[posVuelo].pasajeros = [];
+    }
+};
+
+
+var sacarPasajero = (posVuelo, dniPasajero) => {
+    let pasajero = pasajeros.find(p => p.dni === dniPasajero);
+    vuelos[posVuelo].pasajeros.splice(vuelos[posVuelo].pasajeros.indexOf(pasajero), 1);
+    console.log('El pasajero ' + pasajero.nombre + ' se dio de baja correctamente.');
+};
+
+//ejecución principal
+
+function question_sinc(pregunta) {
+    return new Promise((resolve) => {
+        readline.question(pregunta, (respuesta) => {
+            resolve(respuesta);
+        });
+    });
+}
+
+async function menu() {
+    let salir = false;
+    while (!salir) {
+        console.log('Flaibondi system. X para salir');
+        let entrada = await question_sinc('1 para registrar pasajeros, 2 para reservar un vuelo, 3 para cancelar reserva, 4 para ver historial: ');
+
+
+        if (entrada.toUpperCase() === 'X') {
+            console.log('Sesión cerrada.');
+            salir = true;
+        } else {
+
+            switch (entrada) {
+                case '1':
+                    let nombre = await question_sinc('Ingrese el nombre del pasajero: ');
+                    let dni = await question_sinc('Ingrese su DNI: ');
+                    registrarPasajero(nombre, dni);
+                    break;
+                    case '2':
+                        console.log('Vuelo 0: MDQ>IGU. Vuelo 1: IGU>MDQ.');
+                        let vuelo = await question_sinc('¿Qué vuelo quiere reservar? ');
+                        console.log('El vuelo tiene ', vuelos[vuelo].capacidad - vuelos[vuelo].pasajeros.length, ' lugares libres. ¿Quién quiere que viaje?');
+                        let dniPasajero = await question_sinc('Ingrese el DNI del pasajero (debe estar registrado): ');
+                        agregarPasajero(vuelo, dniPasajero);
+                        break;
+                        case '3':
+                    let vueloBaja = parseInt(await question_sinc('Ingrese el número del vuelo: '));
+                    if (vueloBaja >= 0 && vueloBaja < vuelos.length) {
+                        console.log('Vuelo 0: MDQ>IGU. Vuelo 1: IGU>MDQ.');
+                        let dniPasajeroBaja = await question_sinc('Ingrese el DNI del pasajero (debe estar registrado): ');
+                        sacarPasajero(vueloBaja, dniPasajeroBaja);
+                    } else {
+                        console.log('Número de vuelo inválido.');
+                    }
+                    break;
+                    case '4':
+                    let dniPasajeroHist = await question_sinc('Ingrese el DNI del pasajero (debe estar registrado): ');
+                    let pasajero = pasajeros.find(p => p.dni === dniPasajeroHist);
+                    if (pasajero) {
+                        console.log(pasajero.historial);
+                    } else {
+                        console.log('Entrada inválida. Intente nuevamente');
+                    }
+                    break;
+                    default:
+                        console.log('Entrada inválida. Intente nuevamente');
+                }
+            }
+        }
+        readline.close();
+    }
+    menu();
+
+
+
+
+
+
+
+
+
+
+
